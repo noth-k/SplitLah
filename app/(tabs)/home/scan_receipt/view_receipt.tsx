@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
+import { View, Text, StyleSheet, ScrollView, Pressable, TouchableOpacity } from "react-native";
 import { Dropdown } from 'react-native-element-dropdown';
 import { Link } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 
 export type MenuItems = "Chicken rice" | "Roti Prata" | "Nasi Lemak" | "Teh Bing" | "Bandung";
 
@@ -15,12 +16,12 @@ export const items: { name: MenuItems; price: number }[] = [
 
 export default function ViewReceipt() {
   const [activeTab, setActiveTab] = useState("split-by-item");
-  const [members, setMembers] = useState<Record<MenuItems, string[]>>({
-    "Chicken rice": [],
-    "Roti Prata": [],
-    "Nasi Lemak": [],
-    "Teh Bing": [],
-    "Bandung": [],
+  const [members, setMembers] = useState<Record<MenuItems, string[]>>(() => {
+    const initialMembers: Record<MenuItems, string[]> = {} as Record<MenuItems, string[]>;
+    items.forEach(item => {
+      initialMembers[item.name] = [];
+    });
+    return initialMembers;
   });
   const memberOptions = [
     { key: "1", value: "Aiken" },
@@ -33,8 +34,10 @@ export default function ViewReceipt() {
     serviceCharge: false,
   });
 
+  const [menuItems, setMenuItems] = useState(items);
+
   const calculateTotal = () => {
-    const subtotal = items.reduce((sum, item) => sum + item.price, 0);
+    const subtotal = menuItems.reduce((sum, item) => sum + item.price, 0);
     let total = subtotal;
     
     if (charges.gst) {
@@ -51,6 +54,14 @@ export default function ViewReceipt() {
     if (members.length === 0) return "Select...";
     const text = members.join(", ");
     return text.length > 20 ? text.substring(0, 20) + "..." : text;
+  };
+
+  const handleDeleteItem = (itemToDelete: MenuItems) => {
+    const updatedMembers = { ...members };
+    delete updatedMembers[itemToDelete];
+    setMembers(updatedMembers);
+    
+    setMenuItems(menuItems.filter(item => item.name !== itemToDelete));
   };
 
   return (
@@ -85,10 +96,12 @@ export default function ViewReceipt() {
           <Text style={styles.tableHeaderMembers}>Members</Text>
         </View>
 
-        {items.map((item) => (
+        {menuItems.map((item) => (
           <View key={item.name} style={styles.row}>
-            <Text style={styles.itemName}>{item.name}</Text>
-            <Text style={styles.itemPrice}>{item.price.toFixed(2)}</Text>
+            <View style={styles.itemInfo}>
+              <Text style={styles.itemName}>{item.name}</Text>
+              <Text style={styles.itemPrice}>{item.price.toFixed(2)}</Text>
+            </View>
             <View style={styles.selectContainer}>
               <Dropdown
                 style={[styles.select]}
@@ -120,6 +133,12 @@ export default function ViewReceipt() {
                 containerStyle={styles.dropdown}
               />
             </View>
+            <TouchableOpacity 
+              onPress={() => handleDeleteItem(item.name)}
+              style={styles.deleteButton}
+            >
+              <Ionicons name="trash-outline" size={20} color="#606C38" />
+            </TouchableOpacity>
           </View>
         ))}
 
@@ -242,6 +261,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 15,
+    gap: 8,
+  },
+  itemInfo: {
+    flex: 3,
+    flexDirection: 'row',
   },
   itemName: {
     flex: 2,
@@ -357,5 +381,8 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 14,
     textAlign: 'center',
+  },
+  deleteButton: {
+    padding: 8,
   },
 });
