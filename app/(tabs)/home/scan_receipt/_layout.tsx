@@ -1,12 +1,13 @@
 import React from "react";
 import { Stack } from "expo-router";
 
-export default function Layout() {
-    return (
-        <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="index" />
-            <Stack.Screen name="view_receipt" />
-            <Stack.Screen name="view_bill" />
-        </Stack>
-    );
+export default function ScanReceiptLayout() {
+  return (
+    <Stack>
+      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="camera" options={{ headerShown: false }} />
+      <Stack.Screen name="view_receipt" options={{ headerShown: false }} />
+      <Stack.Screen name="view_bill" options={{ headerShown: false }} />
+    </Stack>
+  );
 }
