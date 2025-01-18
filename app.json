@@ -32,10 +32,20 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
+      ], 
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow SplitLah to access your camera",
+          "microphonePermission": "Allow SplitLah to access your microphone",
+          "recordAudioAndroid": true
+        }
       ]
     ],
     "experiments": {
-      "typedRoutes": true
+      "typedRoutes": true,
+      "tsconfigPaths": true
     }
   }
 }
+
