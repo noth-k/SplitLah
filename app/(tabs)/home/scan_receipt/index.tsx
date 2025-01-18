@@ -16,40 +16,77 @@ import {
 } from "react-native-reanimated";
 import { useRouter } from "expo-router";
 
-interface Payee {
+interface Member {
   name: string;
 }
 
 function ScanReceipt() {
   const router = useRouter();
-  const [name, setName] = useState("");
-  const [payees, setPayees] = useState<Payee[]>([]);
+  const [payerInput, setPayerInput] = useState("");
+  const [payeeInput, setPayeeInput] = useState("");
+  const [payer, setPayer] = useState<Member | null>(null);
+  const [payees, setPayees] = useState<Member[]>([]);
   const [error, setError] = useState<string | null>(null);
   const opacity = useSharedValue(0);
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
   }));
 
-  const handleAddPayee = () => {
-    if (name.trim() === "") {
+  const handleAddPayer = () => {
+    if (payerInput.trim() === "") {
       setError("Name cannot be empty");
       return;
     }
-    if (payees.some((payee) => payee.name === name)) {
+    setPayer({ name: payerInput.trim() });
+    setPayerInput("");
+    setError(null);
+  };
+
+  const handleAddPayee = () => {
+    if (payeeInput.trim() === "") {
+      setError("Name cannot be empty");
+      return;
+    }
+    if (payees.some((payee) => payee.name === payeeInput)) {
       setError("Name already exists");
       return;
     }
-    setPayees([...payees, { name }]);
-    setName("");
+    if (payer?.name === payeeInput) {
+      setError("Payee cannot be the same as payer");
+      return;
+    }
+    setPayees([...payees, { name: payeeInput.trim() }]);
+    setPayeeInput("");
     setError(null);
   };
 
   const handleScanReceipt = () => {
+    if (!payer) {
+      setError("Please add a payer");
+      return;
+    }
     if (payees.length === 0) {
       setError("Please add at least one payee");
       return;
     }
-    router.push("/home/scan_receipt/camera");
+    router.push({
+      pathname: "/home/scan_receipt/camera",
+      params: {
+        payer: payer.name,
+        payees: JSON.stringify(payees.map(p => p.name))
+      }
+    });
+  };
+
+  const handleDeletePayee = (nameToDelete: string) => {
+    setPayees(payees.filter(payee => payee.name !== nameToDelete));
+  };
+
+  const handleEditPayer = () => {
+    if (payer) {
+      setPayerInput(payer.name);
+      setPayer(null);
+    }
   };
 
   useEffect(() => {
@@ -73,44 +110,86 @@ function ScanReceipt() {
 
         <View style={styles.section}>
           <Text style={styles.interSectionTitle}>Payer</Text>
-          <View style={styles.memberRow}>
-            <Ionicons name="person-circle-outline" size={30} color="#333" />
-            <Text style={styles.interMemberName}>Aiken</Text>
-          </View>
+          {payer ? (
+            <View style={styles.memberRow}>
+              <View style={styles.memberInfo}>
+                <Ionicons name="person-circle-outline" size={30} color="#333" />
+                <Text style={styles.interMemberName}>{payer.name}</Text>
+              </View>
+              <View style={styles.memberActions}>
+                <TouchableOpacity onPress={handleEditPayer}>
+                  <Ionicons name="pencil" size={20} color="#606C38" />
+                </TouchableOpacity>
+              </View>
+            </View>
+          ) : (
+            <View style={styles.inputContainer}>
+              <View style={styles.inputWrapper}>
+                <Ionicons name="person-circle-outline" size={30} color="#333" />
+                <TextInput
+                  style={styles.interInput}
+                  placeholder="Enter Payer Name..."
+                  value={payerInput}
+                  onChangeText={setPayerInput}
+                />
+              </View>
+              <TouchableOpacity
+                style={styles.addMemberButton}
+                onPress={handleAddPayer}
+              >
+                <Text style={styles.interButtonText}>Add</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
 
         <View style={styles.section}>
           <Text style={styles.interSectionTitle}>Payee(s)</Text>
           {payees.map((payee) => (
             <View style={styles.memberRow} key={payee.name}>
-              <Ionicons name="person-circle-outline" size={30} color="#333" />
-              <Text style={styles.interMemberName}>{payee.name}</Text>
+              <View style={styles.memberInfo}>
+                <Ionicons name="person-circle-outline" size={30} color="#333" />
+                <Text style={styles.interMemberName}>{payee.name}</Text>
+              </View>
+              <View style={styles.memberActions}>
+                <TouchableOpacity 
+                  onPress={() => {
+                    setPayeeInput(payee.name);
+                    handleDeletePayee(payee.name);
+                  }}
+                >
+                  <Ionicons name="pencil" size={20} color="#606C38" />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => handleDeletePayee(payee.name)}>
+                  <Ionicons name="trash-outline" size={20} color="#606C38" />
+                </TouchableOpacity>
+              </View>
             </View>
           ))}
           <View style={styles.inputContainer}>
-            <Ionicons name="person-circle-outline" size={30} color="#333" />
-            <TextInput
-              style={styles.interInput}
-              placeholder="Enter Name..."
-              value={name}
-              onChangeText={setName}
-              
-            />
+            <View style={styles.inputWrapper}>
+              <Ionicons name="person-circle-outline" size={30} color="#333" />
+              <TextInput
+                style={styles.interInput}
+                placeholder="Enter Payee Name..."
+                value={payeeInput}
+                onChangeText={setPayeeInput}
+              />
+            </View>
+            <TouchableOpacity
+              style={styles.addMemberButton}
+              onPress={handleAddPayee}
+            >
+              <Text style={styles.interButtonText}>Add</Text>
+            </TouchableOpacity>
           </View>
-
-          {error && (
-            <Animated.Text style={[styles.errorText, animatedStyle]}>
-              {error}
-            </Animated.Text>
-          )}
-
-          <TouchableOpacity
-            style={styles.addMemberButton}
-            onPress={handleAddPayee}
-          >
-            <Text style={styles.interButtonText}>+ Add Member</Text>
-          </TouchableOpacity>
         </View>
+
+        {error && (
+          <Animated.Text style={[styles.errorText, animatedStyle]}>
+            {error}
+          </Animated.Text>
+        )}
       </ScrollView>
 
       <TouchableOpacity style={styles.scanButton} onPress={handleScanReceipt}>
@@ -130,10 +209,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#FEFAE0",
   },
   header: {
+    padding: 20,
+    paddingLeft: 32,
+    paddingBottom: 32,
+    borderRadius: 32,
     marginBottom: 30,
     backgroundColor: "#283618",
-    borderRadius: 12,
-    padding: 20,
   },
   interTitle: {
     fontFamily: "Inter",
@@ -167,6 +248,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginVertical: 5,
+    justifyContent: 'space-between',
+  },
+  memberInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  memberActions: {
+    flexDirection: 'row',
+    gap: 15,
+    paddingRight: 5,
   },
   interMemberName: {
     fontFamily: "Inter",
@@ -182,16 +274,15 @@ const styles = StyleSheet.create({
     color: "#999",
   },
   addMemberButton: {
-    borderWidth: 1,
-    borderColor: "#666",
+    backgroundColor: "#606C38",
+    paddingHorizontal: 15,
+    paddingVertical: 8,
     borderRadius: 8,
-    padding: 15,
-    alignItems: "center",
+    marginLeft: 10,
   },
   interButtonText: {
-    fontFamily: "Inter",
-    color: "#333",
-    fontSize: 16,
+    color: "#FEFAE0",
+    fontSize: 14,
     fontWeight: "500",
   },
   scanButton: {
@@ -212,12 +303,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "400",
     marginLeft: 10,
+    flex: 1,
     color: "#333",
   },
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
     marginVertical: 10,
+    justifyContent: 'space-between',
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
   },
   errorText: {
     fontFamily: "Inter",
@@ -225,6 +323,7 @@ const styles = StyleSheet.create({
     fontWeight: "400",
     color: "red",
     marginVertical: 10,
+    paddingLeft: 20,
   },
 });
 

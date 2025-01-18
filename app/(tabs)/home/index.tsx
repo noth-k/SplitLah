@@ -85,6 +85,7 @@ const styles = StyleSheet.create({
     fontFamily: "Inter",
   },
   title: {
+    paddingTop: 70,
     fontSize: 32,
     fontWeight: "600",
     color: AppColors.cream,

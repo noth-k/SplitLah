@@ -8,13 +8,20 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import { Alert, ActivityIndicator } from "react-native";
 
 export default function CameraScreen() {
-  const router = useRouter(); // Add this
+  const { payer, payees } = useLocalSearchParams<{
+    payer: string;
+    payees: string;
+  }>();
+  console.log("payer:", payer);
+  console.log("payees:", payees);
+  const router = useRouter();
   const [facing, setFacing] = useState<CameraType>("back");
   const [permission, requestPermission] = useCameraPermissions();
-  const [photo, setPhoto] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const cameraRef = useRef<any>(null);
 
   if (!permission) {
@@ -43,14 +50,13 @@ export default function CameraScreen() {
 
     try {
       console.log("Taking picture...");
+      setIsLoading(true);
       const photo = await cameraRef.current.takePictureAsync({
         base64: true,
         quality: 0.5,
       });
       console.log("Picture taken, base64 length:", photo.base64?.length);
 
-      // Use your computer's local network IP address
-      // Run 'ipconfig' (Windows) or 'ifconfig' (Mac/Linux) to find it
       const API_URL = "https://splitlah-backend.onrender.com/upload"; // Replace with your IP
       console.log("Sending to:", API_URL);
 
@@ -70,39 +76,47 @@ export default function CameraScreen() {
       console.log("Response status:", response.status);
       const result = await response.json();
       console.log("API Response:", result);
-      router.push("/home/scan_receipt/view_receipt");
+      router.push({
+        pathname: "/home/scan_receipt/view_receipt",
+        params: {
+          payer: payer,
+          payees: payees,
+          items: JSON.stringify(result.analysis.items),
+          hasGst: result.analysis.has_gst.toString(),
+          hasServiceCharge: result.analysis.has_service_charge.toString(),
+        },
+      });
     } catch (error) {
       console.error("Network error:", error);
+      Alert.alert(
+        "Error",
+        "Failed to process image. Please take another clearer photo.",
+        [{ text: "OK" }]
+      );
+    } finally {
+      setIsLoading(false);
     }
   };
-
-  //   const handleTakePicture = async () => {
-  //     try {
-  //       const data = await fetch("http://127.0.0.1:5000/", {
-  //         method: "GET",
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //           Accept: "application/json",
-  //           "Access-Control-Allow-Origin": "*",
-  //         },
-  //       });
-  //       console.log("Sending to:", data.json());
-  //     } catch (error) {
-  //       console.error("Network error:", error);
-  //     }
-  //   };
 
   return (
     <View style={styles.container}>
       <CameraView style={styles.camera} ref={cameraRef} facing={facing}>
         <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.button} onPress={toggleCameraFacing}>
-            <Text style={styles.text}>Flip Camera</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.button} onPress={takePicture}>
-            <Text style={styles.text}>Take Photo</Text>
-            {photo && <Text style={styles.text}>Photo taken</Text>}
-          </TouchableOpacity>
+          {isLoading ? (
+            <ActivityIndicator size="large" color="#0000ff" />
+          ) : (
+            <>
+              <TouchableOpacity
+                style={styles.button}
+                onPress={toggleCameraFacing}
+              >
+                <Text style={styles.text}>Flip Camera</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.button} onPress={takePicture}>
+                <Text style={styles.text}>Take Photo</Text>
+              </TouchableOpacity>
+            </>
+          )}
         </View>
       </CameraView>
     </View>
