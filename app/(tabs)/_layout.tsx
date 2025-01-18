@@ -1,27 +1,30 @@
-import { Tabs } from 'expo-router';
+import { Stack } from 'expo-router';
 import React from 'react';
+import { Platform } from 'react-native';
 
-export default function TabLayout() {
+const AppColors = {
+  darkGreen: '#4A5D32',
+  lightGreen: '#6B7F4F',
+  cream: '#F5F1E6',
+};
+
+export default function StackLayout() {
   return (
-    <Tabs
+    <Stack
       screenOptions={{
         headerShown: false,
-        tabBarStyle: {
-          display: 'none', // Hide the tab bar
+        animation: 'slide_from_right',
+        contentStyle: {
+          backgroundColor: AppColors.cream,
         },
+        ...Platform.select({
+          ios: {
+            headerSafeAreaInsets: { top: true },
+          },
+        }),
       }}>
-      <Tabs.Screen
-        name="home"
-        options={{
-          title: 'Home',
-        }}
-      />
-      <Tabs.Screen
-        name="index"
-        options={{
-          href: null, // Disable this tab from being accessed
-        }}
-      />
-    </Tabs>
+      <Stack.Screen name="home" />
+      {/* Add other screens here */}
+    </Stack>
   );
 }
