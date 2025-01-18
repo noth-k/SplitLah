@@ -13,8 +13,10 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useRouter } from "expo-router";
 
-export default function App() {
+export default function CameraScreen() {
+  const router = useRouter(); // Add this
   const [facing, setFacing] = useState<CameraType>("back");
   const [permission, requestPermission] = useCameraPermissions();
   const [photo, setPhoto] = useState<string | null>(null);
@@ -45,11 +47,15 @@ export default function App() {
     if (!cameraRef.current) return;
     const photo = await cameraRef.current.takePictureAsync();
     setPhoto(photo.uri);
+    // Add navigation back with the photo data
+    // router.back();
+    // You might want to pass the photo data back to the previous screen
+    // This would require setting up a state management solution or using router params
   };
 
   return (
     <View style={styles.container}>
-      <CameraView style={styles.camera} facing={facing}>
+      <CameraView style={styles.camera} ref={cameraRef} facing={facing}>
         <View style={styles.buttonContainer}>
           <TouchableOpacity style={styles.button} onPress={toggleCameraFacing}>
             <Text style={styles.text}>Flip Camera</Text>
