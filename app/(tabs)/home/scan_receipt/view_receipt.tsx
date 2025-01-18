@@ -91,54 +91,54 @@ export default function ViewReceipt() {
 
       <ScrollView style={styles.content}>
         <View style={styles.tableHeader}>
-          <Text style={styles.tableHeaderItem}>Item</Text>
-          <Text style={styles.tableHeaderPrice}>Price</Text>
-          <Text style={styles.tableHeaderMembers}>Members</Text>
+          <Text style={[styles.tableHeaderItem, { flex: 3 }]}>Item</Text>
+          <Text style={[styles.tableHeaderPrice, { flex: 2, paddingLeft: 10 }]}>Price</Text>
+          <Text style={[styles.tableHeaderMembers, { flex: 3 }]}>Members</Text>
         </View>
 
         {menuItems.map((item) => (
           <View key={item.name} style={styles.row}>
-            <View style={styles.itemInfo}>
-              <Text style={styles.itemName}>{item.name}</Text>
-              <Text style={styles.itemPrice}>{item.price.toFixed(2)}</Text>
+            <Text style={[styles.itemName, { flex: 3 }]}>{item.name}</Text>
+            <Text style={[styles.itemPrice, { flex: 2, paddingLeft: 10 }]}>{item.price.toFixed(2)}</Text>
+            <View style={{ flex: 4, flexDirection: 'row', gap: 8 }}>
+              <View style={{ flex: 1 }}>
+                <Dropdown
+                  style={[styles.select]}
+                  data={memberOptions}
+                  labelField="value"
+                  valueField="key"
+                  value=""
+                  onChange={(selectedMember) => {
+                    const currentMembers = members[item.name];
+                    const updatedMembers = currentMembers.includes(selectedMember.value)
+                      ? currentMembers.filter(m => m !== selectedMember.value)
+                      : [...currentMembers, selectedMember.value];
+                    setMembers({ ...members, [item.name]: updatedMembers });
+                  }}
+                  placeholder={truncateMembers(members[item.name])}
+                  renderItem={(dropdownItem) => (
+                    <View style={[styles.dropdownItem, { flexDirection: 'row', alignItems: 'center' }]}>
+                      <Text style={styles.dropdownText}>{dropdownItem.value}</Text>
+                      {members[item.name].includes(dropdownItem.value) && (
+                        <Text style={styles.checkmark}>✓</Text>
+                      )}
+                    </View>
+                  )}
+                  selectedTextStyle={styles.selectText}
+                  placeholderStyle={[
+                    styles.selectText,
+                    members[item.name].length === 0 && { color: '#666' },
+                  ]}
+                  containerStyle={styles.dropdown}
+                />
+              </View>
+              <TouchableOpacity 
+                onPress={() => handleDeleteItem(item.name)}
+                style={styles.deleteButton}
+              >
+                <Ionicons name="trash-outline" size={20} color="#606C38" />
+              </TouchableOpacity>
             </View>
-            <View style={styles.selectContainer}>
-              <Dropdown
-                style={[styles.select]}
-                data={memberOptions}
-                labelField="value"
-                valueField="key"
-                value=""
-                onChange={(selectedMember) => {
-                  const currentMembers = members[item.name];
-                  const updatedMembers = currentMembers.includes(selectedMember.value)
-                    ? currentMembers.filter(m => m !== selectedMember.value)
-                    : [...currentMembers, selectedMember.value];
-                  setMembers({ ...members, [item.name]: updatedMembers });
-                }}
-                placeholder={truncateMembers(members[item.name])}
-                renderItem={(dropdownItem) => (
-                  <View style={[styles.dropdownItem, { flexDirection: 'row', alignItems: 'center' }]}>
-                    <Text style={styles.dropdownText}>{dropdownItem.value}</Text>
-                    {members[item.name].includes(dropdownItem.value) && (
-                      <Text style={styles.checkmark}>✓</Text>
-                    )}
-                  </View>
-                )}
-                selectedTextStyle={styles.selectText}
-                placeholderStyle={[
-                  styles.selectText,
-                  members[item.name].length === 0 && { color: '#666' },
-                ]}
-                containerStyle={styles.dropdown}
-              />
-            </View>
-            <TouchableOpacity 
-              onPress={() => handleDeleteItem(item.name)}
-              style={styles.deleteButton}
-            >
-              <Ionicons name="trash-outline" size={20} color="#606C38" />
-            </TouchableOpacity>
           </View>
         ))}
 
@@ -244,36 +244,31 @@ const styles = StyleSheet.create({
   tableHeader: {
     flexDirection: "row",
     marginBottom: 10,
+    paddingRight: 40,
   },
   tableHeaderItem: {
-    flex: 2,
     color: "#666",
   },
   tableHeaderPrice: {
-    flex: 1,
     color: "#666",
   },
   tableHeaderMembers: {
-    flex: 2,
     color: "#666",
   },
   row: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 15,
-    gap: 8,
   },
   itemInfo: {
     flex: 3,
     flexDirection: 'row',
   },
   itemName: {
-    flex: 2,
     fontSize: 16,
     color: "#283618",
   },
   itemPrice: {
-    flex: 1,
     fontSize: 16,
     color: "#283618",
   },
