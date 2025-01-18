@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
+import { View, Text, StyleSheet, ScrollView, Pressable, TouchableOpacity } from "react-native";
 import { Dropdown } from 'react-native-element-dropdown';
 import { Link } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 
 export type MenuItems = "Chicken rice" | "Roti Prata" | "Nasi Lemak" | "Teh Bing" | "Bandung";
 
@@ -15,12 +16,12 @@ export const items: { name: MenuItems; price: number }[] = [
 
 export default function ViewReceipt() {
   const [activeTab, setActiveTab] = useState("split-by-item");
-  const [members, setMembers] = useState<Record<MenuItems, string[]>>({
-    "Chicken rice": [],
-    "Roti Prata": [],
-    "Nasi Lemak": [],
-    "Teh Bing": [],
-    "Bandung": [],
+  const [members, setMembers] = useState<Record<MenuItems, string[]>>(() => {
+    const initialMembers: Record<MenuItems, string[]> = {} as Record<MenuItems, string[]>;
+    items.forEach(item => {
+      initialMembers[item.name] = [];
+    });
+    return initialMembers;
   });
   const memberOptions = [
     { key: "1", value: "Aiken" },
@@ -33,8 +34,10 @@ export default function ViewReceipt() {
     serviceCharge: false,
   });
 
+  const [menuItems, setMenuItems] = useState(items);
+
   const calculateTotal = () => {
-    const subtotal = items.reduce((sum, item) => sum + item.price, 0);
+    const subtotal = menuItems.reduce((sum, item) => sum + item.price, 0);
     let total = subtotal;
     
     if (charges.gst) {
@@ -51,6 +54,14 @@ export default function ViewReceipt() {
     if (members.length === 0) return "Select...";
     const text = members.join(", ");
     return text.length > 20 ? text.substring(0, 20) + "..." : text;
+  };
+
+  const handleDeleteItem = (itemToDelete: MenuItems) => {
+    const updatedMembers = { ...members };
+    delete updatedMembers[itemToDelete];
+    setMembers(updatedMembers);
+    
+    setMenuItems(menuItems.filter(item => item.name !== itemToDelete));
   };
 
   return (
@@ -80,45 +91,53 @@ export default function ViewReceipt() {
 
       <ScrollView style={styles.content}>
         <View style={styles.tableHeader}>
-          <Text style={styles.tableHeaderItem}>Item</Text>
-          <Text style={styles.tableHeaderPrice}>Price</Text>
-          <Text style={styles.tableHeaderMembers}>Members</Text>
+          <Text style={[styles.tableHeaderItem, { flex: 3 }]}>Item</Text>
+          <Text style={[styles.tableHeaderPrice, { flex: 2, paddingLeft: 10 }]}>Price</Text>
+          <Text style={[styles.tableHeaderMembers, { flex: 3 }]}>Members</Text>
         </View>
 
-        {items.map((item) => (
+        {menuItems.map((item) => (
           <View key={item.name} style={styles.row}>
-            <Text style={styles.itemName}>{item.name}</Text>
-            <Text style={styles.itemPrice}>{item.price.toFixed(2)}</Text>
-            <View style={styles.selectContainer}>
-              <Dropdown
-                style={[styles.select]}
-                data={memberOptions}
-                labelField="value"
-                valueField="key"
-                value=""
-                onChange={(selectedMember) => {
-                  const currentMembers = members[item.name];
-                  const updatedMembers = currentMembers.includes(selectedMember.value)
-                    ? currentMembers.filter(m => m !== selectedMember.value)
-                    : [...currentMembers, selectedMember.value];
-                  setMembers({ ...members, [item.name]: updatedMembers });
-                }}
-                placeholder={truncateMembers(members[item.name])}
-                renderItem={(dropdownItem) => (
-                  <View style={[styles.dropdownItem, { flexDirection: 'row', alignItems: 'center' }]}>
-                    <Text style={styles.dropdownText}>{dropdownItem.value}</Text>
-                    {members[item.name].includes(dropdownItem.value) && (
-                      <Text style={styles.checkmark}>✓</Text>
-                    )}
-                  </View>
-                )}
-                selectedTextStyle={styles.selectText}
-                placeholderStyle={[
-                  styles.selectText,
-                  members[item.name].length === 0 && { color: '#666' },
-                ]}
-                containerStyle={styles.dropdown}
-              />
+            <Text style={[styles.itemName, { flex: 3 }]}>{item.name}</Text>
+            <Text style={[styles.itemPrice, { flex: 2, paddingLeft: 10 }]}>{item.price.toFixed(2)}</Text>
+            <View style={{ flex: 4, flexDirection: 'row', gap: 8 }}>
+              <View style={{ flex: 1 }}>
+                <Dropdown
+                  style={[styles.select]}
+                  data={memberOptions}
+                  labelField="value"
+                  valueField="key"
+                  value=""
+                  onChange={(selectedMember) => {
+                    const currentMembers = members[item.name];
+                    const updatedMembers = currentMembers.includes(selectedMember.value)
+                      ? currentMembers.filter(m => m !== selectedMember.value)
+                      : [...currentMembers, selectedMember.value];
+                    setMembers({ ...members, [item.name]: updatedMembers });
+                  }}
+                  placeholder={truncateMembers(members[item.name])}
+                  renderItem={(dropdownItem) => (
+                    <View style={[styles.dropdownItem, { flexDirection: 'row', alignItems: 'center' }]}>
+                      <Text style={styles.dropdownText}>{dropdownItem.value}</Text>
+                      {members[item.name].includes(dropdownItem.value) && (
+                        <Text style={styles.checkmark}>✓</Text>
+                      )}
+                    </View>
+                  )}
+                  selectedTextStyle={styles.selectText}
+                  placeholderStyle={[
+                    styles.selectText,
+                    members[item.name].length === 0 && { color: '#666' },
+                  ]}
+                  containerStyle={styles.dropdown}
+                />
+              </View>
+              <TouchableOpacity 
+                onPress={() => handleDeleteItem(item.name)}
+                style={styles.deleteButton}
+              >
+                <Ionicons name="trash-outline" size={20} color="#606C38" />
+              </TouchableOpacity>
             </View>
           </View>
         ))}
@@ -159,7 +178,9 @@ export default function ViewReceipt() {
           pathname: "/home/scan_receipt/view_bill",
           params: { 
             members: JSON.stringify(members),
-            total: calculateTotal()
+            total: calculateTotal(),
+            GST: charges.gst.toString(),
+            SC: charges.serviceCharge.toString()
           }
         }} 
         asChild
@@ -223,17 +244,15 @@ const styles = StyleSheet.create({
   tableHeader: {
     flexDirection: "row",
     marginBottom: 10,
+    paddingRight: 40,
   },
   tableHeaderItem: {
-    flex: 2,
     color: "#666",
   },
   tableHeaderPrice: {
-    flex: 1,
     color: "#666",
   },
   tableHeaderMembers: {
-    flex: 2,
     color: "#666",
   },
   row: {
@@ -241,13 +260,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 15,
   },
+  itemInfo: {
+    flex: 3,
+    flexDirection: 'row',
+  },
   itemName: {
-    flex: 2,
     fontSize: 16,
     color: "#283618",
   },
   itemPrice: {
-    flex: 1,
     fontSize: 16,
     color: "#283618",
   },
@@ -355,5 +376,8 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 14,
     textAlign: 'center',
+  },
+  deleteButton: {
+    padding: 8,
   },
 });

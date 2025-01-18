@@ -8,9 +8,13 @@ type BillSummary = {
 };
 
 export default function ViewBill() {
-  const { members, total } = useLocalSearchParams<{ members: string, total: string }>();
+  const { members, total, GST, SC } = useLocalSearchParams<{ 
+    members: string, 
+    total: string, 
+    GST: string, 
+    SC: string 
+  }>();
   const parsedMembers = members ? JSON.parse(members) as Record<MenuItems, string[]> : {};
-  const parsedTotal = parseFloat(total || "0");
 
   const calculateBills = (): BillSummary => {
     const bills: BillSummary = {};
@@ -27,7 +31,16 @@ export default function ViewBill() {
       const itemPrice = items.find(i => i.name === item)?.price || 0;
       const membersCount = selectedMembers.length;
       if (membersCount > 0) {
-        const pricePerPerson = itemPrice / membersCount;
+        let pricePerPerson = itemPrice / membersCount;
+        
+        // Apply GST and service charge
+        if (GST === 'true') {
+          pricePerPerson *= 1.09;
+        }
+        if (SC === 'true') {
+          pricePerPerson *= 1.10;
+        }
+
         selectedMembers.forEach((member: string) => {
           if (member !== "Aiken") {
             bills[member] += pricePerPerson;

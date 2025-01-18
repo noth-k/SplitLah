@@ -64,59 +64,59 @@ function ScanReceipt() {
   }, [error]);
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.interTitle}>Add members</Text>
-        <Text style={styles.interSubtitle}>Split bills effortlessly</Text>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.interSectionTitle}>Payer</Text>
-        <View style={styles.memberRow}>
-          <Ionicons name="person-circle-outline" size={30} color="#333" />
-          <Text style={styles.interMemberName}>Aiken</Text>
+    <View style={styles.container}>
+      <ScrollView>
+        <View style={styles.header}>
+          <Text style={styles.interTitle}>Add members</Text>
+          <Text style={styles.interSubtitle}>Split bills effortlessly</Text>
         </View>
-      </View>
 
-      <View style={styles.section}>
-        <Text style={styles.interSectionTitle}>Payee(s)</Text>
-        {payees.map((payee) => (
-          <View style={styles.memberRow} key={payee.name}>
+        <View style={styles.section}>
+          <Text style={styles.interSectionTitle}>Payer</Text>
+          <View style={styles.memberRow}>
             <Ionicons name="person-circle-outline" size={30} color="#333" />
-            <Text style={styles.interMemberName}>{payee.name}</Text>
+            <Text style={styles.interMemberName}>Aiken</Text>
           </View>
-        ))}
-        <View style={styles.inputContainer}>
-          <Ionicons name="person-circle-outline" size={30} color="#333" />
-          <TextInput
-            style={styles.interInput}
-            placeholder="Enter Name..."
-            value={name}
-            onChangeText={setName}
-            
-          />
         </View>
 
-        {error && (
-          <Animated.Text style={[styles.errorText, animatedStyle]}>
-            {error}
-          </Animated.Text>
-        )}
+        <View style={styles.section}>
+          <Text style={styles.interSectionTitle}>Payee(s)</Text>
+          {payees.map((payee) => (
+            <View style={styles.memberRow} key={payee.name}>
+              <Ionicons name="person-circle-outline" size={30} color="#333" />
+              <Text style={styles.interMemberName}>{payee.name}</Text>
+            </View>
+          ))}
+          <View style={styles.inputContainer}>
+            <Ionicons name="person-circle-outline" size={30} color="#333" />
+            <TextInput
+              style={styles.interInput}
+              placeholder="Enter Name..."
+              value={name}
+              onChangeText={setName}
+              
+            />
+          </View>
 
-        <TouchableOpacity
-          style={styles.addMemberButton}
-          onPress={handleAddPayee}
-        >
-          <Text style={styles.interButtonText}>+ Add Member</Text>
-        </TouchableOpacity>
-      </View>
+          {error && (
+            <Animated.Text style={[styles.errorText, animatedStyle]}>
+              {error}
+            </Animated.Text>
+          )}
 
-      <View style={styles.endSection}>
-        <TouchableOpacity style={styles.scanButton} onPress={handleScanReceipt}>
-          <Text style={styles.interScanText}>Scan my receipt</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+          <TouchableOpacity
+            style={styles.addMemberButton}
+            onPress={handleAddPayee}
+          >
+            <Text style={styles.interButtonText}>+ Add Member</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+
+      <TouchableOpacity style={styles.scanButton} onPress={handleScanReceipt}>
+        <Text style={styles.interScanText}>Scan my receipt</Text>
+      </TouchableOpacity>
+    </View>
   );
 }
 
@@ -196,15 +196,15 @@ const styles = StyleSheet.create({
   },
   scanButton: {
     backgroundColor: "#606C38",
-    borderRadius: 8,
+    margin: 20,
     padding: 15,
+    borderRadius: 8,
     alignItems: "center",
-    marginTop: "auto",
   },
   interScanText: {
     fontFamily: "Inter",
-    color: "white",
-    fontSize: 18,
+    color: "#FEFAE0",
+    fontSize: 16,
     fontWeight: "500",
   },
   interInput: {
@@ -213,7 +213,6 @@ const styles = StyleSheet.create({
     fontWeight: "400",
     marginLeft: 10,
     color: "#333",
-    marginTop: 10,
   },
   inputContainer: {
     flexDirection: "row",
