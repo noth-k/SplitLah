@@ -159,7 +159,9 @@ export default function ViewReceipt() {
           pathname: "/home/scan_receipt/view_bill",
           params: { 
             members: JSON.stringify(members),
-            total: calculateTotal()
+            total: calculateTotal(),
+            GST: charges.gst.toString(),
+            SC: charges.serviceCharge.toString()
           }
         }} 
         asChild
