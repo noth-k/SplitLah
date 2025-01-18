@@ -213,7 +213,6 @@ const styles = StyleSheet.create({
     fontWeight: "400",
     marginLeft: 10,
     color: "#333",
-    marginTop: 10,
   },
   inputContainer: {
     flexDirection: "row",
