@@ -48,7 +48,9 @@ export default function CameraScreen() {
     const photo = await cameraRef.current.takePictureAsync();
     setPhoto(photo.uri);
     // Add navigation back with the photo data
-    // router.back();
+    router.push({
+      pathname: "/home/scan_receipt/view_receipt",
+    });
     // You might want to pass the photo data back to the previous screen
     // This would require setting up a state management solution or using router params
   };

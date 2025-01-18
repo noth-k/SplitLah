@@ -6,6 +6,8 @@ export default function ScanReceiptLayout() {
     <Stack>
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="camera" options={{ headerShown: false }} />
+      <Stack.Screen name="view_receipt" options={{ headerShown: false }} />
+      <Stack.Screen name="view_bill" options={{ headerShown: false }} />
     </Stack>
   );
 }
