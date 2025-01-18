@@ -177,7 +177,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter',
     flex: 1,
     backgroundColor: "#FEFAE0",
-    marginBottom: 70,
   },
   header: {
     padding: 20,
