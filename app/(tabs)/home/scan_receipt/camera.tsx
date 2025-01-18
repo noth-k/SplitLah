@@ -1,9 +1,4 @@
-import {
-  CameraView,
-  CameraType,
-  useCameraPermissions,
-  Camera,
-} from "expo-camera";
+import { CameraView, CameraType, useCameraPermissions } from "expo-camera";
 import { useRef, useState } from "react";
 import {
   Button,
@@ -45,15 +40,57 @@ export default function CameraScreen() {
 
   const takePicture = async () => {
     if (!cameraRef.current) return;
-    const photo = await cameraRef.current.takePictureAsync();
-    setPhoto(photo.uri);
-    // Add navigation back with the photo data
-    router.push({
-      pathname: "/home/scan_receipt/view_receipt",
-    });
-    // You might want to pass the photo data back to the previous screen
-    // This would require setting up a state management solution or using router params
+
+    try {
+      console.log("Taking picture...");
+      const photo = await cameraRef.current.takePictureAsync({
+        base64: true,
+        quality: 0.5,
+      });
+      console.log("Picture taken, base64 length:", photo.base64?.length);
+
+      // Use your computer's local network IP address
+      // Run 'ipconfig' (Windows) or 'ifconfig' (Mac/Linux) to find it
+      const API_URL = "https://splitlah-backend.onrender.com/upload"; // Replace with your IP
+      console.log("Sending to:", API_URL);
+
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          // Add CORS headers
+          "Access-Control-Allow-Origin": "*",
+        },
+        body: JSON.stringify({
+          image: photo.base64,
+        }),
+      });
+
+      console.log("Response status:", response.status);
+      const result = await response.json();
+      console.log("API Response:", result);
+      router.push("/home/scan_receipt/view_receipt");
+    } catch (error) {
+      console.error("Network error:", error);
+    }
   };
+
+  //   const handleTakePicture = async () => {
+  //     try {
+  //       const data = await fetch("http://127.0.0.1:5000/", {
+  //         method: "GET",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //           Accept: "application/json",
+  //           "Access-Control-Allow-Origin": "*",
+  //         },
+  //       });
+  //       console.log("Sending to:", data.json());
+  //     } catch (error) {
+  //       console.error("Network error:", error);
+  //     }
+  //   };
 
   return (
     <View style={styles.container}>
