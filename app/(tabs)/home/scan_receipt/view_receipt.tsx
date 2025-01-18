@@ -1,45 +1,66 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, ScrollView, Pressable, TouchableOpacity } from "react-native";
-import { Dropdown } from 'react-native-element-dropdown';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Pressable,
+  TouchableOpacity,
+} from "react-native";
+import { Dropdown } from "react-native-element-dropdown";
 import { Link } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
 
-export type MenuItems = "Chicken rice" | "Roti Prata" | "Nasi Lemak" | "Teh Bing" | "Bandung";
-
-export const items: { name: MenuItems; price: number }[] = [
-  { name: "Chicken rice", price: 5.6 },
-  { name: "Roti Prata", price: 4.3 },
-  { name: "Nasi Lemak", price: 6.2 },
-  { name: "Teh Bing", price: 1.2 },
-  { name: "Bandung", price: 1.2 },
-];
+export type MenuItem = {
+  name: string;
+  price: number;
+};
 
 export default function ViewReceipt() {
-  const { payer, payees: payeesJson } = useLocalSearchParams<{ 
+  const {
+    payer,
+    payees: payeesJson,
+    items: itemsJson,
+    hasGst,
+    hasServiceCharge,
+  } = useLocalSearchParams<{
     payer: string;
     payees: string;
+    items: string;
+    hasGst: string;
+    hasServiceCharge: string;
   }>();
-  
-  console.log('Received params:', { payer, payeesJson });
-  
-  const payeesList = payeesJson ? JSON.parse(payeesJson) as string[] : [];
-  
+
+  console.log("Received params:", {
+    payer,
+    payeesJson,
+    itemsJson,
+    hasGst,
+    hasServiceCharge,
+  });
+
+  const payeesList = payeesJson ? (JSON.parse(payeesJson) as string[]) : [];
+  const itemsData = itemsJson ? JSON.parse(itemsJson) : {};
+
   const memberOptions = [
-    { key: '0', value: payer },
-    ...payeesList.map((name, index) => ({ 
+    { key: "0", value: payer },
+    ...payeesList.map((name, index) => ({
       key: (index + 1).toString(),
-      value: name 
-    }))
+      value: name,
+    })),
   ];
 
-  console.log('Member options:', memberOptions);
-  
+  console.log("Member options:", memberOptions);
+
   const [activeTab, setActiveTab] = useState("split-by-item");
-  const [members, setMembers] = useState<Record<MenuItems, string[]>>(() => {
-    const initialMembers: Record<MenuItems, string[]> = {} as Record<MenuItems, string[]>;
-    items.forEach(item => {
-      initialMembers[item.name] = [];
+  const [members, setMembers] = useState<Record<string, string[]>>(() => {
+    const initialMembers: Record<string, string[]> = {} as Record<
+      string,
+      string[]
+    >;
+    Object.keys(itemsData).forEach((item) => {
+      initialMembers[item] = [];
     });
     return initialMembers;
   });
@@ -49,19 +70,24 @@ export default function ViewReceipt() {
     serviceCharge: false,
   });
 
-  const [menuItems, setMenuItems] = useState(items);
+  const [menuItems, setMenuItems] = useState(() => {
+    return Object.entries(itemsData).map(([name, price]) => ({
+      name: name as string,
+      price: Number(price),
+    }));
+  });
 
   const calculateTotal = () => {
     const subtotal = menuItems.reduce((sum, item) => sum + item.price, 0);
     let total = subtotal;
-    
+
     if (charges.gst) {
       total *= 1.09;
     }
     if (charges.serviceCharge) {
-      total *= 1.10;
+      total *= 1.1;
     }
-    
+
     return total.toFixed(2);
   };
 
@@ -71,12 +97,12 @@ export default function ViewReceipt() {
     return text.length > 20 ? text.substring(0, 20) + "..." : text;
   };
 
-  const handleDeleteItem = (itemToDelete: MenuItems) => {
+  const handleDeleteItem = (itemToDelete: string) => {
     const updatedMembers = { ...members };
     delete updatedMembers[itemToDelete];
     setMembers(updatedMembers);
-    
-    setMenuItems(menuItems.filter(item => item.name !== itemToDelete));
+
+    setMenuItems(menuItems.filter((item) => item.name !== itemToDelete));
   };
 
   return (
@@ -107,15 +133,19 @@ export default function ViewReceipt() {
       <ScrollView style={styles.content}>
         <View style={styles.tableHeader}>
           <Text style={[styles.tableHeaderItem, { flex: 3 }]}>Item</Text>
-          <Text style={[styles.tableHeaderPrice, { flex: 2, paddingLeft: 10 }]}>Price</Text>
+          <Text style={[styles.tableHeaderPrice, { flex: 2, paddingLeft: 10 }]}>
+            Price
+          </Text>
           <Text style={[styles.tableHeaderMembers, { flex: 3 }]}>Members</Text>
         </View>
 
         {menuItems.map((item) => (
           <View key={item.name} style={styles.row}>
             <Text style={[styles.itemName, { flex: 3 }]}>{item.name}</Text>
-            <Text style={[styles.itemPrice, { flex: 2, paddingLeft: 10 }]}>{item.price.toFixed(2)}</Text>
-            <View style={{ flex: 3, flexDirection: 'row', gap: 8 }}>
+            <Text style={[styles.itemPrice, { flex: 2, paddingLeft: 10 }]}>
+              {item.price.toFixed(2)}
+            </Text>
+            <View style={{ flex: 3, flexDirection: "row", gap: 8 }}>
               <View style={{ flex: 1 }}>
                 <Dropdown
                   style={[styles.select]}
@@ -125,15 +155,24 @@ export default function ViewReceipt() {
                   value=""
                   onChange={(selectedMember) => {
                     const currentMembers = members[item.name];
-                    const updatedMembers = currentMembers.includes(selectedMember.value)
-                      ? currentMembers.filter(m => m !== selectedMember.value)
+                    const updatedMembers = currentMembers.includes(
+                      selectedMember.value
+                    )
+                      ? currentMembers.filter((m) => m !== selectedMember.value)
                       : [...currentMembers, selectedMember.value];
                     setMembers({ ...members, [item.name]: updatedMembers });
                   }}
                   placeholder={truncateMembers(members[item.name])}
                   renderItem={(dropdownItem) => (
-                    <View style={[styles.dropdownItem, { flexDirection: 'row', alignItems: 'center' }]}>
-                      <Text style={styles.dropdownText}>{dropdownItem.value}</Text>
+                    <View
+                      style={[
+                        styles.dropdownItem,
+                        { flexDirection: "row", alignItems: "center" },
+                      ]}
+                    >
+                      <Text style={styles.dropdownText}>
+                        {dropdownItem.value}
+                      </Text>
                       {members[item.name].includes(dropdownItem.value) && (
                         <Text style={styles.checkmark}>✓</Text>
                       )}
@@ -142,12 +181,12 @@ export default function ViewReceipt() {
                   selectedTextStyle={styles.selectText}
                   placeholderStyle={[
                     styles.selectText,
-                    members[item.name].length === 0 && { color: '#666' },
+                    members[item.name].length === 0 && { color: "#666" },
                   ]}
                   containerStyle={styles.dropdown}
                 />
               </View>
-              <TouchableOpacity 
+              <TouchableOpacity
                 onPress={() => handleDeleteItem(item.name)}
                 style={styles.deleteButton}
               >
@@ -163,9 +202,11 @@ export default function ViewReceipt() {
           <View style={styles.chargeRow}>
             <Text style={styles.chargeName}>GST</Text>
             <Text style={styles.chargeValue}>9%</Text>
-            <Pressable 
+            <Pressable
               style={[styles.checkbox, charges.gst && styles.checkedBox]}
-              onPress={() => setCharges(prev => ({ ...prev, gst: !prev.gst }))}
+              onPress={() =>
+                setCharges((prev) => ({ ...prev, gst: !prev.gst }))
+              }
             >
               {charges.gst && <Text style={styles.checkboxTick}>✓</Text>}
             </Pressable>
@@ -173,11 +214,21 @@ export default function ViewReceipt() {
           <View style={styles.chargeRow}>
             <Text style={styles.chargeName}>Service Charge</Text>
             <Text style={styles.chargeValue}>10%</Text>
-            <Pressable 
-              style={[styles.checkbox, charges.serviceCharge && styles.checkedBox]}
-              onPress={() => setCharges(prev => ({ ...prev, serviceCharge: !prev.serviceCharge }))}
+            <Pressable
+              style={[
+                styles.checkbox,
+                charges.serviceCharge && styles.checkedBox,
+              ]}
+              onPress={() =>
+                setCharges((prev) => ({
+                  ...prev,
+                  serviceCharge: !prev.serviceCharge,
+                }))
+              }
             >
-              {charges.serviceCharge && <Text style={styles.checkboxTick}>✓</Text>}
+              {charges.serviceCharge && (
+                <Text style={styles.checkboxTick}>✓</Text>
+              )}
             </Pressable>
           </View>
         </View>
@@ -188,18 +239,19 @@ export default function ViewReceipt() {
         </View>
       </ScrollView>
 
-      <Link 
+      <Link
         href={{
           pathname: "/home/scan_receipt/view_bill",
-          params: { 
+          params: {
             members: JSON.stringify(members),
             total: calculateTotal(),
             GST: charges.gst.toString(),
             SC: charges.serviceCharge.toString(),
             payer: payer,
-            payees: JSON.stringify(payeesList)
-          }
-        }} 
+            payees: JSON.stringify(payeesList),
+            items: JSON.stringify(itemsData),
+          },
+        }}
         asChild
       >
         <Pressable style={styles.nextButton}>
@@ -212,7 +264,7 @@ export default function ViewReceipt() {
 
 const styles = StyleSheet.create({
   container: {
-    fontFamily: 'Inter',
+    fontFamily: "Inter",
     flex: 1,
     backgroundColor: "#FEFAE0",
   },
@@ -279,7 +331,7 @@ const styles = StyleSheet.create({
   },
   itemInfo: {
     flex: 3,
-    flexDirection: 'row',
+    flexDirection: "row",
   },
   itemName: {
     fontSize: 16,
@@ -298,7 +350,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderColor: "#606C38",
     paddingHorizontal: 8,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   dropdown: {
     borderColor: "#DDD",
@@ -309,9 +361,9 @@ const styles = StyleSheet.create({
   dropdownItem: {
     paddingVertical: 8,
     paddingHorizontal: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   dropdownText: {
     fontSize: 16,
@@ -320,7 +372,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 20,
     paddingVertical: 10,
-    textAlignVertical: 'center',
+    textAlignVertical: "center",
     flex: 1,
   },
   arrowIcon: {
@@ -381,18 +433,18 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   checkmark: {
-    marginLeft: 'auto',
-    color: '#4A5D3F',
+    marginLeft: "auto",
+    color: "#4A5D3F",
     fontSize: 16,
   },
   checkedBox: {
-    backgroundColor: '#606C38',
-    borderColor: '#606C38',
+    backgroundColor: "#606C38",
+    borderColor: "#606C38",
   },
   checkboxTick: {
-    color: 'white',
+    color: "white",
     fontSize: 14,
-    textAlign: 'center',
+    textAlign: "center",
   },
   deleteButton: {
     padding: 8,

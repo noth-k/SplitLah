@@ -1,55 +1,79 @@
 import React from "react";
 import { View, Text, StyleSheet, Pressable, ScrollView } from "react-native";
-import { Link, useLocalSearchParams } from "expo-router";
-import { MenuItems, items } from "./view_receipt";
+import { Link, useLocalSearchParams, useRouter } from "expo-router";
 
 type BillSummary = {
   [key: string]: number;
 };
 
 export default function ViewBill() {
-  const { members, total, GST, SC, payer, payees: payeesJson } = useLocalSearchParams<{ 
-    members: string, 
-    total: string, 
-    GST: string, 
-    SC: string,
-    payer: string,
-    payees: string
+  const {
+    members,
+    total,
+    GST,
+    SC,
+    payer,
+    payees: payeesJson,
+    items,
+  } = useLocalSearchParams<{
+    members: string;
+    total: string;
+    GST: string;
+    SC: string;
+    payer: string;
+    payees: string;
+    items: string;
   }>();
-  
-  const parsedMembers = members ? JSON.parse(members) as Record<MenuItems, string[]> : {};
-  const payeesList = payeesJson ? JSON.parse(payeesJson) as string[] : [];
+
+  const parsedMembers = members
+    ? (JSON.parse(members) as Record<string, string[]>)
+    : {};
+  const payeesList = payeesJson ? (JSON.parse(payeesJson) as string[]) : [];
+  const itemsData = items ? (JSON.parse(items) as Record<string, number>) : {};
+  const router = useRouter();
+
+  const handleBack = () => {
+    router.setParams({
+      payer: payer,
+      payees: payeesJson,
+      items: JSON.stringify(itemsData),
+    });
+    router.back();
+  };
 
   const calculateBills = (): BillSummary => {
     const bills: BillSummary = {};
-    
+
     // Initialize bills for each payee
     payeesList.forEach((payee: string) => {
       bills[payee] = 0;
     });
 
     // Calculate amount per person for each item
-    (Object.entries(parsedMembers) as [MenuItems, string[]][]).forEach(([item, selectedMembers]) => {
-      const itemPrice = items.find(i => i.name === item)?.price || 0;
-      const membersCount = selectedMembers.length;
-      if (membersCount > 0) {
-        let pricePerPerson = itemPrice / membersCount;
-        
-        // Apply GST and service charge
-        if (GST === 'true') {
-          pricePerPerson *= 1.09;
-        }
-        if (SC === 'true') {
-          pricePerPerson *= 1.10;
-        }
+    (Object.entries(parsedMembers) as [string, string[]][]).forEach(
+      ([item, selectedMembers]) => {
+        const itemPrice = itemsData[item] || 0;
+        const membersCount = selectedMembers.length;
+        if (membersCount > 0) {
+          let pricePerPerson = itemPrice / membersCount;
 
-        selectedMembers.forEach((member: string) => {
-          if (member !== payer) { // Use payer instead of hardcoded "Aiken"
-            bills[member] = (bills[member] || 0) + pricePerPerson;
+          // Apply GST and service charge
+          if (GST === "true") {
+            pricePerPerson *= 1.09;
           }
-        });
+          if (SC === "true") {
+            pricePerPerson *= 1.1;
+          }
+
+          selectedMembers.forEach((member: string) => {
+            if (member !== payer) {
+              // Use payer instead of hardcoded "Aiken"
+              bills[member] = (bills[member] || 0) + pricePerPerson;
+            }
+          });
+        }
       }
-    });
+    );
 
     return bills;
   };
@@ -70,22 +94,15 @@ export default function ViewBill() {
           .map(([member, amount]) => (
             <View key={member} style={styles.personSection}>
               <Text style={styles.personName}>{member}</Text>
-              <Text style={styles.owedAmount}>
-                owes ${amount.toFixed(2)}
-              </Text>
+              <Text style={styles.owedAmount}>owes ${amount.toFixed(2)}</Text>
             </View>
           ))}
       </ScrollView>
 
       <View style={styles.buttonContainer}>
-        <Link href={{pathname: "/home/scan_receipt/view_receipt", params: { 
-            payer: payer,
-            payees: payeesJson
-          }}}  asChild>
-          <Pressable style={styles.backButton}>
-            <Text style={styles.backButtonText}>Back</Text>
-          </Pressable>
-        </Link>
+        <Pressable style={styles.backButton} onPress={handleBack}>
+          <Text style={styles.backButtonText}>Back</Text>
+        </Pressable>
         <Link href="/home" asChild>
           <Pressable style={styles.homeButton}>
             <Text style={styles.homeButtonText}>Home</Text>
@@ -98,7 +115,7 @@ export default function ViewBill() {
 
 const styles = StyleSheet.create({
   container: {
-    fontFamily: 'Inter',
+    fontFamily: "Inter",
     flex: 1,
     backgroundColor: "#FEFAE0",
   },
