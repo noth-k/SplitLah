@@ -78,7 +78,10 @@ export default function ViewBill() {
       </ScrollView>
 
       <View style={styles.buttonContainer}>
-        <Link href="/home/scan_receipt/view_receipt" asChild>
+        <Link href={{pathname: "/home/scan_receipt/view_receipt", params: { 
+            payer: payer,
+            payees: payeesJson
+          }}}  asChild>
           <Pressable style={styles.backButton}>
             <Text style={styles.backButtonText}>Back</Text>
           </Pressable>

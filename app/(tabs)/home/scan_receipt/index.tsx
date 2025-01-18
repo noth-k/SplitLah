@@ -209,10 +209,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#FEFAE0",
   },
   header: {
+    padding: 20,
+    paddingLeft: 32,
+    paddingBottom: 32,
+    borderRadius: 32,
     marginBottom: 30,
     backgroundColor: "#283618",
-    borderRadius: 12,
-    padding: 20,
   },
   interTitle: {
     fontFamily: "Inter",

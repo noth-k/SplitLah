@@ -7,7 +7,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 const AppColors = {
   darkGreen: '#283618',
   lightGreen: '#606C38',
-  cream: '#F5F1E6',
+  cream: '#FEFAE0',
   arrow:'#606C38'
 };
 
@@ -72,16 +72,15 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: AppColors.darkGreen,
     padding: 20,
-    paddingBottom: 40,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
+    paddingLeft: 32,
+    paddingBottom: 32,
+    borderRadius: 32,
     marginBottom:50,
-    paddingTop:70,
-    paddingLeft:20,
     fontFamily: 'Inter',
 
   },
   title: {
+    paddingTop:70,
     fontSize: 32,
     fontWeight: '600',
     color: AppColors.cream,
