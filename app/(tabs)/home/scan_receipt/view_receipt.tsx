@@ -91,7 +91,7 @@ export default function ViewReceipt() {
             <Text style={styles.itemPrice}>{item.price.toFixed(2)}</Text>
             <View style={styles.selectContainer}>
               <Dropdown
-                style={styles.select}
+                style={[styles.select]}
                 data={memberOptions}
                 labelField="value"
                 valueField="key"
@@ -115,7 +115,7 @@ export default function ViewReceipt() {
                 selectedTextStyle={styles.selectText}
                 placeholderStyle={[
                   styles.selectText,
-                  members[item.name].length === 0 && { color: '#666' }
+                  members[item.name].length === 0 && { color: '#666' },
                 ]}
                 containerStyle={styles.dropdown}
               />
@@ -261,6 +261,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderColor: "#606C38",
     paddingHorizontal: 8,
+    justifyContent: 'center',
   },
   dropdown: {
     borderColor: "#DDD",
@@ -280,6 +281,10 @@ const styles = StyleSheet.create({
   },
   selectText: {
     fontSize: 16,
+    lineHeight: 20,
+    paddingVertical: 10,
+    textAlignVertical: 'center',
+    flex: 1,
   },
   arrowIcon: {
     fontSize: 14,
