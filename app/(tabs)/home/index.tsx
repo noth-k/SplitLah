@@ -45,19 +45,19 @@ export default function HomeScreen() {
           icon="receipt"
           title="Scan Receipt"
           description="Scan and split instantly"
-          href="./(tabs)/home/scan_receipt"
+          href="/home/scan_receipt"
         />
         <MenuItem
           icon="edit"
           title="Manual Entry"
           description="Enter bill details manually"
-          href="./(tabs)/home/manual_input"
+          href="/home/manual_input"
         />
         <MenuItem
           icon="history"
           title="History"
           description="View past splits"
-          href="./(tabs)/home/history"
+          href="/home/scan_receipt"
         />
       </View>
     </View>

@@ -8,22 +8,24 @@ type BillSummary = {
 };
 
 export default function ViewBill() {
-  const { members, total, GST, SC } = useLocalSearchParams<{ 
+  const { members, total, GST, SC, payer, payees: payeesJson } = useLocalSearchParams<{ 
     members: string, 
     total: string, 
     GST: string, 
-    SC: string 
+    SC: string,
+    payer: string,
+    payees: string
   }>();
+  
   const parsedMembers = members ? JSON.parse(members) as Record<MenuItems, string[]> : {};
+  const payeesList = payeesJson ? JSON.parse(payeesJson) as string[] : [];
 
   const calculateBills = (): BillSummary => {
     const bills: BillSummary = {};
     
-    // Initialize bills for each member
-    (Object.values(parsedMembers).flat() as string[]).forEach((member: string) => {
-      if (member !== "Aiken" && !bills[member]) {
-        bills[member] = 0;
-      }
+    // Initialize bills for each payee
+    payeesList.forEach((payee: string) => {
+      bills[payee] = 0;
     });
 
     // Calculate amount per person for each item
@@ -42,8 +44,8 @@ export default function ViewBill() {
         }
 
         selectedMembers.forEach((member: string) => {
-          if (member !== "Aiken") {
-            bills[member] += pricePerPerson;
+          if (member !== payer) { // Use payer instead of hardcoded "Aiken"
+            bills[member] = (bills[member] || 0) + pricePerPerson;
           }
         });
       }
@@ -62,14 +64,17 @@ export default function ViewBill() {
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {Object.entries(bills).map(([member, amount]) => (
-          <View key={member} style={styles.personSection}>
-            <Text style={styles.personName}>{member}</Text>
-            <Text style={styles.owedAmount}>
-              {member} owes Aiken ${amount.toFixed(2)}
-            </Text>
-          </View>
-        ))}
+        <Text style={styles.payerText}>Pay to {payer}</Text>
+        {Object.entries(bills)
+          .filter(([member]) => member !== payer && bills[member] > 0)
+          .map(([member, amount]) => (
+            <View key={member} style={styles.personSection}>
+              <Text style={styles.personName}>{member}</Text>
+              <Text style={styles.owedAmount}>
+                owes ${amount.toFixed(2)}
+              </Text>
+            </View>
+          ))}
       </ScrollView>
 
       <View style={styles.buttonContainer}>
@@ -78,7 +83,7 @@ export default function ViewBill() {
             <Text style={styles.backButtonText}>Back</Text>
           </Pressable>
         </Link>
-        <Link href="/home/scan_receipt" asChild>
+        <Link href="/home" asChild>
           <Pressable style={styles.homeButton}>
             <Text style={styles.homeButtonText}>Home</Text>
           </Pressable>
@@ -123,7 +128,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "600",
     color: "#283618",
-    marginBottom: 8,
+    marginBottom: 4,
   },
   owedAmount: {
     fontSize: 16,
@@ -158,5 +163,11 @@ const styles = StyleSheet.create({
     color: "#FEFAE0",
     fontSize: 16,
     fontWeight: "500",
+  },
+  payerText: {
+    fontSize: 18,
+    fontWeight: "500",
+    color: "#606C38",
+    marginBottom: 20,
   },
 });
