@@ -13,10 +13,11 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 
 export default function CameraScreen() {
-  const router = useRouter(); // Add this
+  const { payer, payees } = useLocalSearchParams<{ payer: string, payees: string }>();
+  const router = useRouter();
   const [facing, setFacing] = useState<CameraType>("back");
   const [permission, requestPermission] = useCameraPermissions();
   const [photo, setPhoto] = useState<string | null>(null);
@@ -50,9 +51,23 @@ export default function CameraScreen() {
     // Add navigation back with the photo data
     router.push({
       pathname: "/home/scan_receipt/view_receipt",
+      params: {
+        payer,
+        payees
+      }
     });
     // You might want to pass the photo data back to the previous screen
     // This would require setting up a state management solution or using router params
+  };
+
+  const handleNext = () => {
+    router.push({
+      pathname: "/home/scan_receipt/view_receipt",
+      params: {
+        payer,
+        payees
+      }
+    });
   };
 
   return (
@@ -68,6 +83,9 @@ export default function CameraScreen() {
           </TouchableOpacity>
         </View>
       </CameraView>
+      <TouchableOpacity onPress={handleNext}>
+        <Text>Next</Text>
+      </TouchableOpacity>
     </View>
   );
 }

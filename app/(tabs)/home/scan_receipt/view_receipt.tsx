@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Pressable, TouchableOpacity } from 
 import { Dropdown } from 'react-native-element-dropdown';
 import { Link } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useLocalSearchParams } from "expo-router";
 
 export type MenuItems = "Chicken rice" | "Roti Prata" | "Nasi Lemak" | "Teh Bing" | "Bandung";
 
@@ -15,6 +16,25 @@ export const items: { name: MenuItems; price: number }[] = [
 ];
 
 export default function ViewReceipt() {
+  const { payer, payees: payeesJson } = useLocalSearchParams<{ 
+    payer: string;
+    payees: string;
+  }>();
+  
+  console.log('Received params:', { payer, payeesJson });
+  
+  const payeesList = payeesJson ? JSON.parse(payeesJson) as string[] : [];
+  
+  const memberOptions = [
+    { key: '0', value: payer },
+    ...payeesList.map((name, index) => ({ 
+      key: (index + 1).toString(),
+      value: name 
+    }))
+  ];
+
+  console.log('Member options:', memberOptions);
+  
   const [activeTab, setActiveTab] = useState("split-by-item");
   const [members, setMembers] = useState<Record<MenuItems, string[]>>(() => {
     const initialMembers: Record<MenuItems, string[]> = {} as Record<MenuItems, string[]>;
@@ -23,11 +43,6 @@ export default function ViewReceipt() {
     });
     return initialMembers;
   });
-  const memberOptions = [
-    { key: "1", value: "Aiken" },
-    { key: "2", value: "Dueet" },
-    { key: "3", value: "Charlie" },
-  ];
 
   const [charges, setCharges] = useState({
     gst: false,
@@ -100,13 +115,13 @@ export default function ViewReceipt() {
           <View key={item.name} style={styles.row}>
             <Text style={[styles.itemName, { flex: 3 }]}>{item.name}</Text>
             <Text style={[styles.itemPrice, { flex: 2, paddingLeft: 10 }]}>{item.price.toFixed(2)}</Text>
-            <View style={{ flex: 4, flexDirection: 'row', gap: 8 }}>
+            <View style={{ flex: 3, flexDirection: 'row', gap: 8 }}>
               <View style={{ flex: 1 }}>
                 <Dropdown
                   style={[styles.select]}
                   data={memberOptions}
                   labelField="value"
-                  valueField="key"
+                  valueField="value"
                   value=""
                   onChange={(selectedMember) => {
                     const currentMembers = members[item.name];
@@ -180,7 +195,9 @@ export default function ViewReceipt() {
             members: JSON.stringify(members),
             total: calculateTotal(),
             GST: charges.gst.toString(),
-            SC: charges.serviceCharge.toString()
+            SC: charges.serviceCharge.toString(),
+            payer: payer,
+            payees: JSON.stringify(payeesList)
           }
         }} 
         asChild
